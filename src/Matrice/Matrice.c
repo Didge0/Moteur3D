@@ -124,12 +124,12 @@ Matrice matrice_mul_scal(const Matrice* mat, void* val, size_t dtype){
       return new_mat;
 }
 
-Matrice matrice_prod_vect(const Matrice* mat1, const Matrice* mat2, Operator op_add, Operator op_mul){
+Matrice matrice_prod(const Matrice* mat1, const Matrice* mat2, Operator op_add, Operator op_mul){
       if(mat1->dtype != mat2->dtype){
-            perror("[matrice_prod_vect] - dtype different\n");
+            perror("[matrice_prod] - dtype different\n");
       }  
       if(mat1->shape[0] != mat2->shape[1]){
-            perror("[matrice_prod_vect] - width mat1 different of height mat2\n");
+            perror("[matrice_prod] - width mat1 different of height mat2\n");
       }
       size_t dx,dy,i;
       Matrice mat = matrice_init_val(0,mat2->shape[0], mat1->shape[1], mat1->dtype);
@@ -147,6 +147,16 @@ Matrice matrice_prod_vect(const Matrice* mat1, const Matrice* mat2, Operator op_
       return mat;
 }
 
-
+Matrice vect_prod(const Matrice* mat1, const Matrice* mat2){
+      if(mat1->dtype != mat2->dtype){
+            perror("[vect_prod] - dtype different\n");
+      }
+      if(mat1->shape[0] != mat2->shape[0] ||mat1->shape[1] != mat2->shape[1]){
+            perror("[vect_prod] - shape different\n");
+      }
+      if(mat1->shape[0] != 1 || mat1->shape[1] != 0){
+            
+      }
+}
 
 

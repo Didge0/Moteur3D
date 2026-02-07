@@ -40,9 +40,9 @@ void matrice_show(const Matrice* mat, const Print_fct_ptr print);
 Matrice matrice_add(const Matrice* mat1, const Matrice* mat2, Operator op);
 Matrice matrice_sub(const Matrice* mat1, const Matrice* mat2, Operator op);
 Matrice matrice_mul_scal(const Matrice* mat, void* val, size_t dtype);
-Matrice matrice_prod_vect(const Matrice* mat1, const Matrice* mat2, Operator op_add, Operator op_mul);
+Matrice matrice_prod(const Matrice* mat1, const Matrice* mat2, Operator op_add, Operator op_mul);
 
-
+Matrice vect_prod(const Matrice* mat1, const Matrice* mat2);
 
 
 #endif // MATRICE_H
