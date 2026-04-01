@@ -1,5 +1,6 @@
 #include "Matrice.h"
 #include <string.h>
+#include <stdio.h>
 
 
 Matrice matrice_init(const size_t width, const size_t height, size_t dtype){
@@ -54,6 +55,10 @@ void* matrice_get(const Matrice* mat, const size_t idx_w, const size_t idx_h){
             return NULL;
       }
       return (char*)mat->data + (idx_h * mat->strides[1]*mat->dtype) + (idx_w*mat->strides[0]*mat->dtype);
+}
+
+void matrice_set_zero(Matrice* mat){
+      memset(mat->data, 0, mat->dtype * mat->shape[0] * mat->shape[1]);
 }
 
 void matrice_show(const Matrice* mat, const Print_fct_ptr print){
@@ -124,39 +129,40 @@ Matrice matrice_mul_scal(const Matrice* mat, void* val, size_t dtype){
       return new_mat;
 }
 
-Matrice matrice_prod(const Matrice* mat1, const Matrice* mat2, Operator op_add, Operator op_mul){
-      if(mat1->dtype != mat2->dtype){
+void matrice_prod(Matrice* mat_Dst, const Matrice* mat1, const Matrice* mat2, Operator op_add, Operator op_mul){
+      if(mat1->dtype != mat2->dtype && mat_Dst->dtype != mat1->dtype){
             perror("[matrice_prod] - dtype different\n");
+            return;
       }  
       if(mat1->shape[0] != mat2->shape[1]){
             perror("[matrice_prod] - width mat1 different of height mat2\n");
+            return;
       }
+      if(mat_Dst->shape[0] != mat2->shape[0]){
+            perror("[Matrice_prod] - Width mat_Dst different than width mat2\n");
+            return;
+      }
+      if(mat_Dst->shape[1] != mat1->shape[1]){
+            perror("[Matrice_prod] - Height mat_Dst different than height mat2\n");
+            return;
+      }
+      matrice_set_zero(mat_Dst);
       size_t dx,dy,i;
-      Matrice mat = matrice_init_val(0,mat2->shape[0], mat1->shape[1], mat1->dtype);
       void* val = malloc(mat1->dtype);
-      for(dx=0; dx<mat.shape[0]; dx++){
-            for(dy=0; dy<mat.shape[1]; dy++){
+      for(dx=0; dx<mat_Dst->shape[0]; dx++){
+            for(dy=0; dy<mat_Dst->shape[1]; dy++){
                   *(char*)val = 0;
                   for(i=0; i<mat1->shape[0]; i++){
                         op_mul(val,matrice_get(mat1,i,dy),matrice_get(mat2,dx,i));
-                        op_add(matrice_get(&mat,dx,dy),matrice_get(&mat,dx,dy),val);
+                        op_add(matrice_get(mat_Dst,dx,dy),matrice_get(mat_Dst,dx,dy),val);
                   }
             }
       }
       free(val);
-      return mat;
 }
 
-Matrice vect_prod(const Matrice* mat1, const Matrice* mat2){
-      if(mat1->dtype != mat2->dtype){
-            perror("[vect_prod] - dtype different\n");
-      }
-      if(mat1->shape[0] != mat2->shape[0] ||mat1->shape[1] != mat2->shape[1]){
-            perror("[vect_prod] - shape different\n");
-      }
-      if(mat1->shape[0] != 1 || mat1->shape[1] != 0){
-            
-      }
+void matrice_load(Matrice* mat, const void* tab){
+      memcpy(mat->data, tab, mat->dtype * mat->shape[0] * mat->shape[1]);
 }
 
 

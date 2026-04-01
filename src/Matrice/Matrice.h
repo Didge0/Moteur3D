@@ -35,14 +35,16 @@ void matrice_free(Matrice* mat);
 
 void* matrice_get(const Matrice* mat, const size_t idx_w, const size_t idx_h);
 
+void matrice_set_zero(Matrice* mat);
+
 void matrice_show(const Matrice* mat, const Print_fct_ptr print);
 
 Matrice matrice_add(const Matrice* mat1, const Matrice* mat2, Operator op);
 Matrice matrice_sub(const Matrice* mat1, const Matrice* mat2, Operator op);
 Matrice matrice_mul_scal(const Matrice* mat, void* val, size_t dtype);
-Matrice matrice_prod(const Matrice* mat1, const Matrice* mat2, Operator op_add, Operator op_mul);
+void matrice_prod(Matrice* mat_Dst, const Matrice* mat1, const Matrice* mat2, Operator op_add, Operator op_mul);
 
-Matrice vect_prod(const Matrice* mat1, const Matrice* mat2);
+void matrice_load(Matrice* mat, const void* tab);
 
 
 #endif // MATRICE_H
