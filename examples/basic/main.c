@@ -1,4 +1,5 @@
 #include <stdio.h>
+#define ADVANCED_API
 #include "Moteur3D/Moteur3D.h"
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -13,8 +14,9 @@
 
 static void update_auto_orbit_test(M3D_Engine* engine, bool enabled, float delta_seconds){
       if(enabled && engine->camera.mode == CAM_MODE_ORBIT){
-            rotate_camera_yaw(&engine->camera, 45.0f * delta_seconds);
-            rotate_camera_pitch(&engine->camera, 20.0f * delta_seconds * sinf(SDL_GetTicks() / 500.0f));
+            //move_camera_backward(&engine->camera, 0.2f);
+            //rotate_camera_yaw(&engine->camera, 45.0f * delta_seconds);
+            //rotate_camera_pitch(&engine->camera, 20.0f * delta_seconds * sinf(SDL_GetTicks() / 500.0f));
       }
 }
 

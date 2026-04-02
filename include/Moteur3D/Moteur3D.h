@@ -1,8 +1,8 @@
 #ifndef MOTEUR3D_H
 #define MOTEUR3D_H
 
-#include "../Matrice/Matrice.h"
 #include "SDL3/SDL.h"
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -26,6 +26,8 @@ typedef struct {
 } Vect3;
 
 //MARK: Camera State
+
+typedef struct M3D_CameraInternal M3D_CameraInternal;
 
 typedef struct {
     /* Etat runtime principal de la camera */
@@ -54,10 +56,8 @@ typedef struct {
     Vect3 target;
     float distance;
 
-    /* Matrices cachees */
-    Matrice view;
-    Matrice proj;
-    Matrice viewProj;
+    /* Etat interne (matrices/cache prive moteur) */
+    M3D_CameraInternal* internal;
 } Moteur3D;
 
 //MARK: Init Data
@@ -140,9 +140,6 @@ typedef struct {
     Vect3 c;
 } M3D_Triangle3D;
 
-static inline void add_float(void* Dst, const void* val1, const void* val2){ *(float*)Dst = *(float*)val1 + *(float*)val2; }
-static inline void mul_float(void* Dst, const void* val1, const void* val2){ *(float*)Dst = *(float*)val1 * (*(float*)val2); }
-
 //MARK: Camera Initialization API
 
 /* Initialise une camera et construit ses matrices de vue/projection. */
@@ -207,25 +204,9 @@ size_t M3D_draw_triangles(M3D_Engine* engine, const M3D_Triangle3D* triangles, s
 /* Libere seulement les ressources internes de la camera. */
 void M3D_end(Moteur3D* moteur);
 
-/* Transforme un point monde vers les coordonnees NDC. */
-Vect3 M3D_Convert_Vect(Moteur3D* moteur, Vect3* vect);
-
 /* Projection compacte monde -> ecran. */
 M3D_PointProjection M3D_project_point(const Moteur3D* moteur, const Vect3* world_point);
 
-//MARK: Camera Movement API
-
-/* Deplacements camera (utiles surtout en mode FPS). */
-void move_camera_right(Moteur3D* moteur);
-void move_camera_left(Moteur3D* moteur);
-void move_camera_up(Moteur3D* moteur);
-void move_camera_down(Moteur3D* moteur);
-void move_camera_forward(Moteur3D* moteur);
-void move_camera_backward(Moteur3D* moteur);
-
-/* Rotations de camera (degres). */
-void rotate_camera_yaw(Moteur3D* moteur, float delta_deg);
-void rotate_camera_pitch(Moteur3D* moteur, float delta_deg);
 
 //MARK: Camera Mode API
 
@@ -247,5 +228,23 @@ void M3D_bind_default_mouse_wheel(Moteur3D* moteur, float wheel_y);
 
 /* Applique l'etat d'input d'une frame avec delta time (secondes) et reset les deltas souris. */
 void M3D_apply_input_state(Moteur3D* moteur, M3D_InputState* input, float delta_seconds);
+
+//MARK: Advanced API Gate
+
+/*
+ * API avancee (bas niveau):
+ * accessible uniquement si ADVANCED_API est defini avant cet include.
+ */
+#if defined(ADVANCED_API)
+void move_camera_right(Moteur3D* moteur, float speed);
+void move_camera_left(Moteur3D* moteur, float speed);
+void move_camera_up(Moteur3D* moteur, float speed);
+void move_camera_down(Moteur3D* moteur, float speed);
+void move_camera_forward(Moteur3D* moteur, float speed);
+void move_camera_backward(Moteur3D* moteur, float speed);
+
+void rotate_camera_yaw(Moteur3D* moteur, float delta_deg);
+void rotate_camera_pitch(Moteur3D* moteur, float delta_deg);
+#endif
 
 #endif // MOTEUR3D_H

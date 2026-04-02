@@ -1,4 +1,5 @@
-#include "Moteur3D.h"
+#include "Moteur3D/Moteur3D.h"
+#include "Moteur3D_internal.h"
 #include <math.h>
 #include <stdlib.h>
 
@@ -27,12 +28,14 @@ static inline bool m3d_is_ndc_visible(const Vect3* ndc_point){
 }
 
 static Vect4 m3d_world_to_view(const Moteur3D* moteur, const Vect3* world_point){
+      const M3D_CameraInternal* cami = moteur->internal;
       Vect4 point = {world_point->x, world_point->y, world_point->z, 1.0f};
-      return m3d_transform_vec4(&moteur->view, &point);
+      return m3d_transform_vec4(&cami->view, &point);
 }
 
 static Vect4 m3d_view_to_clip(const Moteur3D* moteur, const Vect4* view_point){
-      return m3d_transform_vec4(&moteur->proj, view_point);
+      const M3D_CameraInternal* cami = moteur->internal;
+      return m3d_transform_vec4(&cami->proj, view_point);
 }
 
 static bool m3d_clip_to_ndc(const Vect4* clip_point, Vect3* ndc_point){
@@ -625,10 +628,6 @@ size_t M3D_draw_triangles(M3D_Engine* engine, const M3D_Triangle3D* triangles, s
 }
 
 //MARK: Camera Utility API
-
-Vect3 M3D_Convert_Vect(Moteur3D* moteur, Vect3* vect){
-      return M3D_project_point(moteur, vect).ndc;
-}
 
 M3D_PointProjection M3D_project_point(const Moteur3D* moteur, const Vect3* world_point){
       Vect4 view;

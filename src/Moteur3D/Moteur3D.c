@@ -1,4 +1,5 @@
-#include "Moteur3D.h"
+#include "Moteur3D/Moteur3D.h"
+#include "Moteur3D_internal.h"
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <string.h>
@@ -10,7 +11,20 @@
 #define M3D_MOUSE_WHEEL_ZOOM_STEP 0.25f
 #define M3D_FPS_MOVE_SPEED_UNITS_PER_SEC 12.0f
 
+/* Forward declarations for functions used before their definition. */
+void rotate_camera_yaw(Moteur3D* moteur, float delta_deg);
+void rotate_camera_pitch(Moteur3D* moteur, float delta_deg);
+void move_camera_right(Moteur3D* moteur, float speed);
+void move_camera_left(Moteur3D* moteur, float speed);
+void move_camera_up(Moteur3D* moteur, float speed);
+void move_camera_down(Moteur3D* moteur, float speed);
+void move_camera_forward(Moteur3D* moteur, float speed);
+void move_camera_backward(Moteur3D* moteur, float speed);
+
 //MARK: Internal Math Helpers
+
+static inline void add_float(void* Dst, const void* val1, const void* val2){ *(float*)Dst = *(float*)val1 + *(float*)val2; }
+static inline void mul_float(void* Dst, const void* val1, const void* val2){ *(float*)Dst = *(float*)val1 * (*(float*)val2); }
 
 static inline void normalize(Vect3* vect){
       float norm = sqrtf(vect->x*vect->x + vect->y*vect->y + vect->z*vect->z);
@@ -50,9 +64,25 @@ static inline float clamp_float(float value, float min_value, float max_value){
       return value;
 }
 
+static inline M3D_CameraInternal* m3d_cam_internal(Moteur3D* moteur){
+      return moteur->internal;
+}
+
+static inline bool m3d_translate_camera_fps(Moteur3D* moteur, const Vect3* axis, float speed){
+      if(moteur->mode != CAM_MODE_FPS){
+            return false;
+      }
+
+      moteur->pos.x += axis->x * speed;
+      moteur->pos.y += axis->y * speed;
+      moteur->pos.z += axis->z * speed;
+      return true;
+}
+
 //MARK: Internal Camera Helpers
 
 static inline void update_matrice(Moteur3D* moteur){
+      M3D_CameraInternal* cami = m3d_cam_internal(moteur);
       float view_tab[16]=
       {
                           moteur->right.x,   moteur->right.y,   moteur->right.z,  -vect3_prod_scal(&moteur->right, &moteur->pos),
@@ -60,7 +90,7 @@ static inline void update_matrice(Moteur3D* moteur){
                         moteur->forward.x, moteur->forward.y, moteur->forward.z, -vect3_prod_scal(&moteur->forward, &moteur->pos),
                             0,                 0,                 0,                    1
       };
-      memcpy(moteur->view.data, view_tab, sizeof(float) * 16);
+      memcpy(cami->view.data, view_tab, sizeof(float) * 16);
 
       {
             float tanfov = 1 / (tanf(DEG_TO_RAD(moteur->fov) * 0.5f));
@@ -70,10 +100,10 @@ static inline void update_matrice(Moteur3D* moteur){
                   0, 0, (moteur->zfar + moteur->znear) / (moteur->znear - moteur->zfar), (2 * moteur->zfar * moteur->znear) / (moteur->znear - moteur->zfar),
                   0, 0, 1, 0
             };
-            memcpy(moteur->proj.data, proj_tab, sizeof(float) * 16);
+            memcpy(cami->proj.data, proj_tab, sizeof(float) * 16);
       }
 
-      matrice_prod(&moteur->viewProj, &moteur->proj, &moteur->view, add_float, mul_float);
+      matrice_prod(&cami->viewProj, &cami->proj, &cami->view, add_float, mul_float);
 }
 
 static inline void M3D_update_camera_pose(Moteur3D* moteur){
@@ -108,6 +138,7 @@ static inline void M3D_update_camera_pose(Moteur3D* moteur){
 //MARK: Camera Initialization API
 
 void M3D_initCamera(Moteur3D* moteur, const Moteur3D_InitData* data){
+      M3D_CameraInternal* cami;
       moteur->mode = data->mode;
 
       moteur->pos = data->pos;
@@ -131,9 +162,15 @@ void M3D_initCamera(Moteur3D* moteur, const Moteur3D_InitData* data){
       moteur->width = data->width;
       moteur->height = data->height;
 
-      moteur->view = matrice_init(4, 4, sizeof(float));
-      moteur->proj = matrice_init(4, 4, sizeof(float));
-      moteur->viewProj = matrice_init(4, 4, sizeof(float));
+      cami = (M3D_CameraInternal*)malloc(sizeof(M3D_CameraInternal));
+      moteur->internal = cami;
+      if(cami == NULL){
+            return;
+      }
+
+      cami->view = matrice_init(4, 4, sizeof(float));
+      cami->proj = matrice_init(4, 4, sizeof(float));
+      cami->viewProj = matrice_init(4, 4, sizeof(float));
 
       M3D_update_camera_pose(moteur);
 }
@@ -293,69 +330,53 @@ void M3D_present_frame(M3D_Engine* engine){
 //MARK: Camera Utility API
 
 void M3D_end(Moteur3D* moteur){
-      matrice_free(&moteur->view);
-      matrice_free(&moteur->proj);
-      matrice_free(&moteur->viewProj);
+      M3D_CameraInternal* cami = m3d_cam_internal(moteur);
+      if(cami != NULL){
+            matrice_free(&cami->view);
+            matrice_free(&cami->proj);
+            matrice_free(&cami->viewProj);
+            free(cami);
+            moteur->internal = NULL;
+      }
 }
 
 //MARK: Camera Movement API
 
-void move_camera_right(Moteur3D* moteur){
-      const float speed = 0.2f;
-      if(moteur->mode == CAM_MODE_FPS){
-            moteur->pos.x += moteur->right.x * speed;
-            moteur->pos.y += moteur->right.y * speed;
-            moteur->pos.z += moteur->right.z * speed;
+void move_camera_right(Moteur3D* moteur, float speed){
+      if(m3d_translate_camera_fps(moteur, &moteur->right, speed)){
             update_matrice(moteur);
       }
 }
 
-void move_camera_left(Moteur3D* moteur){
-      const float speed = 0.2f;
-      if(moteur->mode == CAM_MODE_FPS){
-            moteur->pos.x -= moteur->right.x * speed;
-            moteur->pos.y -= moteur->right.y * speed;
-            moteur->pos.z -= moteur->right.z * speed;
+void move_camera_left(Moteur3D* moteur, float speed){
+      Vect3 left = {-moteur->right.x, -moteur->right.y, -moteur->right.z};
+      if(m3d_translate_camera_fps(moteur, &left, speed)){
             update_matrice(moteur);
       }
 }
 
-void move_camera_up(Moteur3D* moteur){
-      const float speed = 0.2f;
-      if(moteur->mode == CAM_MODE_FPS){
-            moteur->pos.x += moteur->up.x * speed;
-            moteur->pos.y += moteur->up.y * speed;
-            moteur->pos.z += moteur->up.z * speed;
+void move_camera_up(Moteur3D* moteur, float speed){
+      if(m3d_translate_camera_fps(moteur, &moteur->up, speed)){
             update_matrice(moteur);
       }
 }
 
-void move_camera_down(Moteur3D* moteur){
-      const float speed = 0.2f;
-      if(moteur->mode == CAM_MODE_FPS){
-            moteur->pos.x -= moteur->up.x * speed;
-            moteur->pos.y -= moteur->up.y * speed;
-            moteur->pos.z -= moteur->up.z * speed;
+void move_camera_down(Moteur3D* moteur, float speed){
+      Vect3 down = {-moteur->up.x, -moteur->up.y, -moteur->up.z};
+      if(m3d_translate_camera_fps(moteur, &down, speed)){
             update_matrice(moteur);
       }
 }
 
-void move_camera_forward(Moteur3D* moteur){
-      const float speed = 0.2f;
-      if(moteur->mode == CAM_MODE_FPS){
-            moteur->pos.x += moteur->forward.x * speed;
-            moteur->pos.y += moteur->forward.y * speed;
-            moteur->pos.z += moteur->forward.z * speed;
+void move_camera_forward(Moteur3D* moteur, float speed){
+      if(m3d_translate_camera_fps(moteur, &moteur->forward, speed)){
             update_matrice(moteur);
       }
 }
 
-void move_camera_backward(Moteur3D* moteur){
-      const float speed = 0.2f;
-      if(moteur->mode == CAM_MODE_FPS){
-            moteur->pos.x -= moteur->forward.x * speed;
-            moteur->pos.y -= moteur->forward.y * speed;
-            moteur->pos.z -= moteur->forward.z * speed;
+void move_camera_backward(Moteur3D* moteur, float speed){
+      Vect3 backward = {-moteur->forward.x, -moteur->forward.y, -moteur->forward.z};
+      if(m3d_translate_camera_fps(moteur, &backward, speed)){
             update_matrice(moteur);
       }
 }
@@ -493,51 +514,27 @@ void M3D_bind_default_mouse_wheel(Moteur3D* moteur, float wheel_y){
 //MARK: Internal Input Helpers
 
 static inline void m3d_apply_fps_moves(Moteur3D* moteur, const M3D_InputState* input, float move_delta){
-      bool did_move = false;
-
       if(moteur->mode != CAM_MODE_FPS){
             return;
       }
 
       if(input->move_up){
-            moteur->pos.x += moteur->up.x * move_delta;
-            moteur->pos.y += moteur->up.y * move_delta;
-            moteur->pos.z += moteur->up.z * move_delta;
-            did_move = true;
+            move_camera_up(moteur, move_delta);
       }
       if(input->move_down){
-            moteur->pos.x -= moteur->up.x * move_delta;
-            moteur->pos.y -= moteur->up.y * move_delta;
-            moteur->pos.z -= moteur->up.z * move_delta;
-            did_move = true;
+            move_camera_down(moteur, move_delta);
       }
       if(input->move_right){
-            moteur->pos.x += moteur->right.x * move_delta;
-            moteur->pos.y += moteur->right.y * move_delta;
-            moteur->pos.z += moteur->right.z * move_delta;
-            did_move = true;
+            move_camera_right(moteur, move_delta);
       }
       if(input->move_left){
-            moteur->pos.x -= moteur->right.x * move_delta;
-            moteur->pos.y -= moteur->right.y * move_delta;
-            moteur->pos.z -= moteur->right.z * move_delta;
-            did_move = true;
+            move_camera_left(moteur, move_delta);
       }
       if(input->move_forward){
-            moteur->pos.x += moteur->forward.x * move_delta;
-            moteur->pos.y += moteur->forward.y * move_delta;
-            moteur->pos.z += moteur->forward.z * move_delta;
-            did_move = true;
+            move_camera_forward(moteur, move_delta);
       }
       if(input->move_backward){
-            moteur->pos.x -= moteur->forward.x * move_delta;
-            moteur->pos.y -= moteur->forward.y * move_delta;
-            moteur->pos.z -= moteur->forward.z * move_delta;
-            did_move = true;
-      }
-
-      if(did_move){
-            update_matrice(moteur);
+            move_camera_backward(moteur, move_delta);
       }
 }
 
