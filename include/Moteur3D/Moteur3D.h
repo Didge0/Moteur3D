@@ -236,15 +236,15 @@ void M3D_apply_input_state(Moteur3D* moteur, M3D_InputState* input, float delta_
  * accessible uniquement si ADVANCED_API est defini avant cet include.
  */
 #if defined(ADVANCED_API)
-void move_camera_right(Moteur3D* moteur, float speed);
-void move_camera_left(Moteur3D* moteur, float speed);
-void move_camera_up(Moteur3D* moteur, float speed);
-void move_camera_down(Moteur3D* moteur, float speed);
-void move_camera_forward(Moteur3D* moteur, float speed);
-void move_camera_backward(Moteur3D* moteur, float speed);
+void M3D_move_camera_right(Moteur3D* moteur, float speed);
+void M3D_move_camera_left(Moteur3D* moteur, float speed);
+void M3D_move_camera_up(Moteur3D* moteur, float speed);
+void M3D_move_camera_down(Moteur3D* moteur, float speed);
+void M3D_move_camera_forward(Moteur3D* moteur, float speed);
+void M3D_move_camera_backward(Moteur3D* moteur, float speed);
 
-void rotate_camera_yaw(Moteur3D* moteur, float delta_deg);
-void rotate_camera_pitch(Moteur3D* moteur, float delta_deg);
+void M3D_rotate_camera_yaw(Moteur3D* moteur, float delta_deg);
+void M3D_rotate_camera_pitch(Moteur3D* moteur, float delta_deg);
 #endif
 
 #endif // MOTEUR3D_H

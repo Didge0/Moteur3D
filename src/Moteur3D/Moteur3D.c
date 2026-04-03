@@ -12,14 +12,14 @@
 #define M3D_FPS_MOVE_SPEED_UNITS_PER_SEC 12.0f
 
 /* Forward declarations for functions used before their definition. */
-void rotate_camera_yaw(Moteur3D* moteur, float delta_deg);
-void rotate_camera_pitch(Moteur3D* moteur, float delta_deg);
-void move_camera_right(Moteur3D* moteur, float speed);
-void move_camera_left(Moteur3D* moteur, float speed);
-void move_camera_up(Moteur3D* moteur, float speed);
-void move_camera_down(Moteur3D* moteur, float speed);
-void move_camera_forward(Moteur3D* moteur, float speed);
-void move_camera_backward(Moteur3D* moteur, float speed);
+void M3D_rotate_camera_yaw(Moteur3D* moteur, float delta_deg);
+void M3D_rotate_camera_pitch(Moteur3D* moteur, float delta_deg);
+void M3D_move_camera_right(Moteur3D* moteur, float speed);
+void M3D_move_camera_left(Moteur3D* moteur, float speed);
+void M3D_move_camera_up(Moteur3D* moteur, float speed);
+void M3D_move_camera_down(Moteur3D* moteur, float speed);
+void M3D_move_camera_forward(Moteur3D* moteur, float speed);
+void M3D_move_camera_backward(Moteur3D* moteur, float speed);
 
 //MARK: Internal Math Helpers
 
@@ -265,7 +265,7 @@ bool M3D_init_custom(M3D_Engine* engine, const Moteur3D_InitData* initData, cons
             return false;
       }
 
-      rotate_camera_yaw(&engine->camera, 0.0f);
+      M3D_rotate_camera_yaw(&engine->camera, 0.0f);
       return true;
 }
 
@@ -342,46 +342,46 @@ void M3D_end(Moteur3D* moteur){
 
 //MARK: Camera Movement API
 
-void move_camera_right(Moteur3D* moteur, float speed){
+void M3D_move_camera_right(Moteur3D* moteur, float speed){
       if(m3d_translate_camera_fps(moteur, &moteur->right, speed)){
             update_matrice(moteur);
       }
 }
 
-void move_camera_left(Moteur3D* moteur, float speed){
+void M3D_move_camera_left(Moteur3D* moteur, float speed){
       Vect3 left = {-moteur->right.x, -moteur->right.y, -moteur->right.z};
       if(m3d_translate_camera_fps(moteur, &left, speed)){
             update_matrice(moteur);
       }
 }
 
-void move_camera_up(Moteur3D* moteur, float speed){
+void M3D_move_camera_up(Moteur3D* moteur, float speed){
       if(m3d_translate_camera_fps(moteur, &moteur->up, speed)){
             update_matrice(moteur);
       }
 }
 
-void move_camera_down(Moteur3D* moteur, float speed){
+void M3D_move_camera_down(Moteur3D* moteur, float speed){
       Vect3 down = {-moteur->up.x, -moteur->up.y, -moteur->up.z};
       if(m3d_translate_camera_fps(moteur, &down, speed)){
             update_matrice(moteur);
       }
 }
 
-void move_camera_forward(Moteur3D* moteur, float speed){
+void M3D_move_camera_forward(Moteur3D* moteur, float speed){
       if(m3d_translate_camera_fps(moteur, &moteur->forward, speed)){
             update_matrice(moteur);
       }
 }
 
-void move_camera_backward(Moteur3D* moteur, float speed){
+void M3D_move_camera_backward(Moteur3D* moteur, float speed){
       Vect3 backward = {-moteur->forward.x, -moteur->forward.y, -moteur->forward.z};
       if(m3d_translate_camera_fps(moteur, &backward, speed)){
             update_matrice(moteur);
       }
 }
 
-void rotate_camera_yaw(Moteur3D* moteur, float delta_deg){
+void M3D_rotate_camera_yaw(Moteur3D* moteur, float delta_deg){
       const float full_turn = 2.0f * (float)M_PI;
 
       if(moteur->mode == CAM_MODE_FPS || moteur->mode == CAM_MODE_ORBIT){
@@ -394,7 +394,7 @@ void rotate_camera_yaw(Moteur3D* moteur, float delta_deg){
       }
 }
 
-void rotate_camera_pitch(Moteur3D* moteur, float delta_deg){
+void M3D_rotate_camera_pitch(Moteur3D* moteur, float delta_deg){
       const float pitch_limit = DEG_TO_RAD(89.0f);
 
       if(moteur->mode == CAM_MODE_FPS || moteur->mode == CAM_MODE_ORBIT){
@@ -519,52 +519,52 @@ static inline void m3d_apply_fps_moves(Moteur3D* moteur, const M3D_InputState* i
       }
 
       if(input->move_up){
-            move_camera_up(moteur, move_delta);
+            M3D_move_camera_up(moteur, move_delta);
       }
       if(input->move_down){
-            move_camera_down(moteur, move_delta);
+            M3D_move_camera_down(moteur, move_delta);
       }
       if(input->move_right){
-            move_camera_right(moteur, move_delta);
+            M3D_move_camera_right(moteur, move_delta);
       }
       if(input->move_left){
-            move_camera_left(moteur, move_delta);
+            M3D_move_camera_left(moteur, move_delta);
       }
       if(input->move_forward){
-            move_camera_forward(moteur, move_delta);
+            M3D_move_camera_forward(moteur, move_delta);
       }
       if(input->move_backward){
-            move_camera_backward(moteur, move_delta);
+            M3D_move_camera_backward(moteur, move_delta);
       }
 }
 
 static inline void m3d_apply_orbit_moves(Moteur3D* moteur, const M3D_InputState* input, float rot_delta_deg){
       if(input->move_left){
-            rotate_camera_yaw(moteur, -rot_delta_deg);
+            M3D_rotate_camera_yaw(moteur, -rot_delta_deg);
       }
       if(input->move_right){
-            rotate_camera_yaw(moteur, rot_delta_deg);
+            M3D_rotate_camera_yaw(moteur, rot_delta_deg);
       }
       if(input->move_forward){
-            rotate_camera_pitch(moteur, rot_delta_deg);
+            M3D_rotate_camera_pitch(moteur, rot_delta_deg);
       }
       if(input->move_backward){
-            rotate_camera_pitch(moteur, -rot_delta_deg);
+            M3D_rotate_camera_pitch(moteur, -rot_delta_deg);
       }
 }
 
 static inline void m3d_apply_common_rotations(Moteur3D* moteur, const M3D_InputState* input, float rot_delta_deg){
       if(input->rot_left){
-            rotate_camera_yaw(moteur, -rot_delta_deg);
+            M3D_rotate_camera_yaw(moteur, -rot_delta_deg);
       }
       if(input->rot_right){
-            rotate_camera_yaw(moteur, rot_delta_deg);
+            M3D_rotate_camera_yaw(moteur, rot_delta_deg);
       }
       if(input->rot_up){
-            rotate_camera_pitch(moteur, rot_delta_deg);
+            M3D_rotate_camera_pitch(moteur, rot_delta_deg);
       }
       if(input->rot_down){
-            rotate_camera_pitch(moteur, -rot_delta_deg);
+            M3D_rotate_camera_pitch(moteur, -rot_delta_deg);
       }
 }
 
@@ -595,10 +595,10 @@ void M3D_apply_input_state(Moteur3D* moteur, M3D_InputState* input, float delta_
       m3d_apply_common_rotations(moteur, input, rot_delta_deg);
 
       if(input->mouse_dx != 0.0f){
-            rotate_camera_yaw(moteur, input->mouse_dx * M3D_MOUSE_SENSITIVITY_DEG);
+            M3D_rotate_camera_yaw(moteur, input->mouse_dx * M3D_MOUSE_SENSITIVITY_DEG);
       }
       if(input->mouse_dy != 0.0f){
-            rotate_camera_pitch(moteur, -input->mouse_dy * M3D_MOUSE_SENSITIVITY_DEG);
+            M3D_rotate_camera_pitch(moteur, -input->mouse_dy * M3D_MOUSE_SENSITIVITY_DEG);
       }
 
       input->mouse_dx = 0.0f;
