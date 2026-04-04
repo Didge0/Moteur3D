@@ -72,7 +72,7 @@ int main(){
       };
 
       bool is_opened = true;
-      if(!M3D_init_custom(&engine, &initData, "Moving Masse")){
+      if(!M3D_init_custom(&engine, &initData, "Moving Masse", 1)){
             return false;
       }
 
@@ -120,7 +120,7 @@ int main(){
                         }
 
                         int should_quit = 0;
-                        M3D_bind_default_key_down(&engine.camera, &input, (int)event.key.key, event.key.repeat ? 1 : 0, &should_quit);
+                        M3D_bind_default_key_down(&engine, &input, (int)event.key.key, event.key.repeat ? 1 : 0, &should_quit);
                         if(should_quit){
                               is_opened = false;
                         }
@@ -129,7 +129,7 @@ int main(){
                   }else if(event.type == SDL_EVENT_MOUSE_MOTION){
                         M3D_bind_default_mouse_motion(&input, (float)event.motion.xrel, (float)event.motion.yrel);
                   }else if(event.type == SDL_EVENT_MOUSE_WHEEL){
-                        M3D_bind_default_mouse_wheel(&engine.camera, event.wheel.y);
+                        M3D_bind_default_mouse_wheel(&engine, event.wheel.y);
                   }
             }
 

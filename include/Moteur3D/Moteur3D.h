@@ -151,13 +151,16 @@ void M3D_fill_default_init_data(Moteur3D_InitData* data, int width, int height);
 //MARK: Engine Lifecycle API
 
 /* Initialise SDL + fenetre + renderer + texture + buffer de rendu. */
-bool M3D_init_sdl(M3D_Engine* engine, int width, int height, const char* window_title);
+bool M3D_init_sdl(M3D_Engine* engine, int width, int height, const char* window_title, int fullscreen);
 
 /* Initialise l'engine avec valeurs camera par defaut. */
-bool M3D_init_default(M3D_Engine* engine, int width, int height);
+bool M3D_init_default(M3D_Engine* engine, int width, int height, int fullscreen);
 
 /* Initialise l'engine avec valeurs camera personnalisees. */
-bool M3D_init_custom(M3D_Engine* engine, const Moteur3D_InitData* initData, const char* window_title);
+bool M3D_init_custom(M3D_Engine* engine, const Moteur3D_InitData* initData, const char* window_title, int fullscreen);
+
+/* Change le mode plein ecran de l'engine. */
+void M3D_set_Fullscreen(M3D_Engine* engine, int fullscreen);
 
 /* Libere tout le contexte engine (camera + SDL + buffer). */
 void M3D_shutdown(M3D_Engine* engine);
@@ -219,10 +222,10 @@ void M3D_set_mode(Moteur3D* moteur, CameraMode mode);
 //MARK: Input Binding API
 
 /* Bindings clavier/souris par defaut. */
-void M3D_bind_default_key_down(Moteur3D* moteur, M3D_InputState* input, int keycode, int is_repeat, int* should_quit);
+void M3D_bind_default_key_down(M3D_Engine* engine, M3D_InputState* input, int keycode, int is_repeat, int* should_quit);
 void M3D_bind_default_key_up(M3D_InputState* input, int keycode);
 void M3D_bind_default_mouse_motion(M3D_InputState* input, float dx, float dy);
-void M3D_bind_default_mouse_wheel(Moteur3D* moteur, float wheel_y);
+void M3D_bind_default_mouse_wheel(M3D_Engine* engine, float wheel_y);
 
 //MARK: Input Apply API
 

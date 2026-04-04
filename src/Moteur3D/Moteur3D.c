@@ -135,6 +135,56 @@ static inline void M3D_update_camera_pose(Moteur3D* moteur){
       update_matrice(moteur);
 }
 
+static bool m3d_resize_render_targets(M3D_Engine* engine, int width, int height){
+      SDL_Texture* new_texture;
+      uint32_t* new_buffer;
+      float* new_zbuffer;
+
+      if(engine == NULL || engine->renderer == NULL){
+            return false;
+      }
+
+      if(width <= 0){
+            width = 1;
+      }
+      if(height <= 0){
+            height = 1;
+      }
+
+      new_texture = SDL_CreateTexture(engine->renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, width, height);
+      if(new_texture == NULL){
+            return false;
+      }
+
+      new_buffer = (uint32_t*)malloc((size_t)width * (size_t)height * sizeof(uint32_t));
+      if(new_buffer == NULL){
+            SDL_DestroyTexture(new_texture);
+            return false;
+      }
+
+      new_zbuffer = (float*)malloc((size_t)width * (size_t)height * sizeof(float));
+      if(new_zbuffer == NULL){
+            free(new_buffer);
+            SDL_DestroyTexture(new_texture);
+            return false;
+      }
+
+      if(engine->texture != NULL){
+            SDL_DestroyTexture(engine->texture);
+      }
+      free(engine->buffer);
+      free(engine->zbuffer);
+
+      engine->texture = new_texture;
+      engine->buffer = new_buffer;
+      engine->zbuffer = new_zbuffer;
+      engine->camera.width = width;
+      engine->camera.height = height;
+      M3D_update_camera_pose(&engine->camera);
+      SDL_SetRenderTarget(engine->renderer, engine->texture);
+      return true;
+}
+
 //MARK: Camera Initialization API
 
 void M3D_initCamera(Moteur3D* moteur, const Moteur3D_InitData* data){
@@ -192,36 +242,26 @@ void M3D_fill_default_init_data(Moteur3D_InitData* data, int width, int height){
 
 //MARK: Engine Lifecycle API
 
-bool M3D_init_sdl(M3D_Engine* engine, int width, int height, const char* window_title){
+bool M3D_init_sdl(M3D_Engine* engine, int width, int height, const char* window_title, int fullscreen){
       int render_width = width;
       int render_height = height;
+      SDL_WindowFlags window_flags = 0;
 
       if(!SDL_Init(SDL_INIT_VIDEO)){
             return false;
       }
 
-      if(!SDL_CreateWindowAndRenderer(window_title != NULL ? window_title : "Moteur3D", width, height, 0, &engine->window, &engine->renderer)){
+      if(fullscreen){
+            window_flags = SDL_WINDOW_FULLSCREEN;
+      }
+
+      if(!SDL_CreateWindowAndRenderer(window_title != NULL ? window_title : "Moteur3D", width, height, window_flags, &engine->window, &engine->renderer)){
             SDL_Quit();
             return false;
       }
 
       SDL_GetWindowSize(engine->window, &render_width, &render_height);
-      engine->camera.width = render_width;
-      engine->camera.height = render_height;
-
-      engine->texture = SDL_CreateTexture(engine->renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, render_width, render_height);
-      if(engine->texture == NULL){
-            SDL_DestroyRenderer(engine->renderer);
-            SDL_DestroyWindow(engine->window);
-            engine->renderer = NULL;
-            engine->window = NULL;
-            SDL_Quit();
-            return false;
-      }
-
-      engine->buffer = (uint32_t*)malloc((size_t)render_width * (size_t)render_height * sizeof(uint32_t));
-      if(engine->buffer == NULL){
-            SDL_DestroyTexture(engine->texture);
+      if(!m3d_resize_render_targets(engine, render_width, render_height)){
             SDL_DestroyRenderer(engine->renderer);
             SDL_DestroyWindow(engine->window);
             engine->texture = NULL;
@@ -231,42 +271,45 @@ bool M3D_init_sdl(M3D_Engine* engine, int width, int height, const char* window_
             return false;
       }
 
-      engine->zbuffer = (float*)malloc((size_t)render_width * (size_t)render_height * sizeof(float));
-      if(engine->zbuffer == NULL){
-            free(engine->buffer);
-            SDL_DestroyTexture(engine->texture);
-            SDL_DestroyRenderer(engine->renderer);
-            SDL_DestroyWindow(engine->window);
-            engine->buffer = NULL;
-            engine->texture = NULL;
-            engine->renderer = NULL;
-            engine->window = NULL;
-            SDL_Quit();
-            return false;
-      }
-
-      SDL_SetRenderTarget(engine->renderer, engine->texture);
       SDL_SetWindowRelativeMouseMode(engine->window, true);
       return true;
 }
 
-bool M3D_init_default(M3D_Engine* engine, int width, int height){
+bool M3D_init_default(M3D_Engine* engine, int width, int height, int fullscreen){
       Moteur3D_InitData initData;
       M3D_fill_default_init_data(&initData, width, height);
-      return M3D_init_custom(engine, &initData, "Moteur3D");
+      return M3D_init_custom(engine, &initData, "Moteur3D", fullscreen);
 }
 
-bool M3D_init_custom(M3D_Engine* engine, const Moteur3D_InitData* initData, const char* window_title){
+bool M3D_init_custom(M3D_Engine* engine, const Moteur3D_InitData* initData, const char* window_title, int fullscreen){
       memset(engine, 0, sizeof(*engine));
 
       M3D_initCamera(&engine->camera, initData);
-      if(!M3D_init_sdl(engine, initData->width, initData->height, window_title)){
+      if(!M3D_init_sdl(engine, initData->width, initData->height, window_title, fullscreen)){
             M3D_end(&engine->camera);
             return false;
       }
 
       M3D_rotate_camera_yaw(&engine->camera, 0.0f);
       return true;
+}
+
+void M3D_set_Fullscreen(M3D_Engine* engine, int fullscreen){
+      int new_width;
+      int new_height;
+
+      if(engine->window == NULL){
+            return;
+      }
+
+      if(fullscreen){
+            SDL_SetWindowFullscreen(engine->window, SDL_WINDOW_FULLSCREEN);
+      }else{
+            SDL_SetWindowFullscreen(engine->window, 0);
+      }
+
+      SDL_GetWindowSize(engine->window, &new_width, &new_height);
+      m3d_resize_render_targets(engine, new_width, new_height);
 }
 
 void M3D_shutdown(M3D_Engine* engine){
@@ -436,7 +479,7 @@ void M3D_set_mode(Moteur3D* moteur, CameraMode mode){
 
 //MARK: Input Binding API
 
-void M3D_bind_default_key_down(Moteur3D* moteur, M3D_InputState* input, int keycode, int is_repeat, int* should_quit){
+void M3D_bind_default_key_down(M3D_Engine* engine, M3D_InputState* input, int keycode, int is_repeat, int* should_quit){
       if(keycode == SDLK_ESCAPE){
             if(should_quit != NULL){
                   *should_quit = 1;
@@ -445,10 +488,19 @@ void M3D_bind_default_key_down(Moteur3D* moteur, M3D_InputState* input, int keyc
       }
 
       if(keycode == SDLK_M && !is_repeat){
-            if(moteur->mode == CAM_MODE_FPS){
-                  M3D_set_mode(moteur, CAM_MODE_ORBIT);
+            if(engine->camera.mode == CAM_MODE_FPS){
+                  M3D_set_mode(&engine->camera, CAM_MODE_ORBIT);
             }else{
-                  M3D_set_mode(moteur, CAM_MODE_FPS);
+                  M3D_set_mode(&engine->camera, CAM_MODE_FPS);
+            }
+            return;
+      }
+
+      if(keycode == SDLK_F11 && !is_repeat){
+            if(engine->window != NULL){
+                  Uint32 flags = SDL_GetWindowFlags(engine->window);
+                  int is_fullscreen = (flags & SDL_WINDOW_FULLSCREEN) != 0;
+                  M3D_set_Fullscreen(engine, !is_fullscreen);
             }
             return;
       }
@@ -505,9 +557,9 @@ void M3D_bind_default_mouse_motion(M3D_InputState* input, float dx, float dy){
       input->mouse_dy += dy;
 }
 
-void M3D_bind_default_mouse_wheel(Moteur3D* moteur, float wheel_y){
-      if(moteur->mode == CAM_MODE_ORBIT && wheel_y != 0.0f){
-            M3D_zoom_orbit(moteur, -wheel_y * M3D_MOUSE_WHEEL_ZOOM_STEP);
+void M3D_bind_default_mouse_wheel(M3D_Engine* engine, float wheel_y){
+      if(engine->camera.mode == CAM_MODE_ORBIT && wheel_y != 0.0f){
+            M3D_zoom_orbit(&engine->camera, -wheel_y * M3D_MOUSE_WHEEL_ZOOM_STEP);
       }
 }
 
