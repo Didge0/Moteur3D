@@ -245,14 +245,14 @@ void M3D_fill_default_init_data(Moteur3D_InitData* data, int width, int height){
 bool M3D_init_sdl(M3D_Engine* engine, int width, int height, const char* window_title, int fullscreen){
       int render_width = width;
       int render_height = height;
-      SDL_WindowFlags window_flags = 0;
+      SDL_WindowFlags window_flags = SDL_WINDOW_RESIZABLE;
 
       if(!SDL_Init(SDL_INIT_VIDEO)){
             return false;
       }
 
       if(fullscreen){
-            window_flags = SDL_WINDOW_FULLSCREEN;
+                 window_flags |= SDL_WINDOW_FULLSCREEN;
       }
 
       if(!SDL_CreateWindowAndRenderer(window_title != NULL ? window_title : "Moteur3D", width, height, window_flags, &engine->window, &engine->renderer)){
@@ -295,9 +295,6 @@ bool M3D_init_custom(M3D_Engine* engine, const Moteur3D_InitData* initData, cons
 }
 
 void M3D_set_Fullscreen(M3D_Engine* engine, int fullscreen){
-      int new_width;
-      int new_height;
-
       if(engine->window == NULL){
             return;
       }
@@ -308,8 +305,19 @@ void M3D_set_Fullscreen(M3D_Engine* engine, int fullscreen){
             SDL_SetWindowFullscreen(engine->window, 0);
       }
 
+      M3D_sync_window_size(engine);
+}
+
+bool M3D_sync_window_size(M3D_Engine* engine){
+      int new_width;
+      int new_height;
+
+      if(engine == NULL || engine->window == NULL){
+            return false;
+      }
+
       SDL_GetWindowSize(engine->window, &new_width, &new_height);
-      m3d_resize_render_targets(engine, new_width, new_height);
+      return m3d_resize_render_targets(engine, new_width, new_height);
 }
 
 void M3D_shutdown(M3D_Engine* engine){
@@ -478,7 +486,17 @@ void M3D_set_mode(Moteur3D* moteur, CameraMode mode){
 }
 
 //MARK: Input Binding API
-
+bool M3D_bind_default_key_down_fullscreen(M3D_Engine* engine, M3D_InputState* input, int keycode, int is_repeat){
+      if(keycode == SDLK_F11 && !is_repeat){
+            if(engine->window != NULL){
+                  Uint32 flags = SDL_GetWindowFlags(engine->window);
+                  int is_fullscreen = (flags & SDL_WINDOW_FULLSCREEN) != 0;
+                  M3D_set_Fullscreen(engine, !is_fullscreen);
+                  return true;
+            }
+      }
+      return false;
+}
 void M3D_bind_default_key_down(M3D_Engine* engine, M3D_InputState* input, int keycode, int is_repeat, int* should_quit){
       if(keycode == SDLK_ESCAPE){
             if(should_quit != NULL){
@@ -496,12 +514,9 @@ void M3D_bind_default_key_down(M3D_Engine* engine, M3D_InputState* input, int ke
             return;
       }
 
-      if(keycode == SDLK_F11 && !is_repeat){
-            if(engine->window != NULL){
-                  Uint32 flags = SDL_GetWindowFlags(engine->window);
-                  int is_fullscreen = (flags & SDL_WINDOW_FULLSCREEN) != 0;
-                  M3D_set_Fullscreen(engine, !is_fullscreen);
-            }
+      if(keycode == SDLK_LCTRL && !is_repeat){
+            bool is_relative = SDL_GetWindowRelativeMouseMode(engine->window);
+            SDL_SetWindowRelativeMouseMode(engine->window, !is_relative);
             return;
       }
 

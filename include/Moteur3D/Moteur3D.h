@@ -162,6 +162,9 @@ bool M3D_init_custom(M3D_Engine* engine, const Moteur3D_InitData* initData, cons
 /* Change le mode plein ecran de l'engine. */
 void M3D_set_Fullscreen(M3D_Engine* engine, int fullscreen);
 
+/* Resynchronise la taille de rendu avec la taille actuelle de la fenetre. */
+bool M3D_sync_window_size(M3D_Engine* engine);
+
 /* Libere tout le contexte engine (camera + SDL + buffer). */
 void M3D_shutdown(M3D_Engine* engine);
 
@@ -222,6 +225,7 @@ void M3D_set_mode(Moteur3D* moteur, CameraMode mode);
 //MARK: Input Binding API
 
 /* Bindings clavier/souris par defaut. */
+bool M3D_bind_default_key_down_fullscreen(M3D_Engine* engine, M3D_InputState* input, int keycode, int is_repeat);
 void M3D_bind_default_key_down(M3D_Engine* engine, M3D_InputState* input, int keycode, int is_repeat, int* should_quit);
 void M3D_bind_default_key_up(M3D_InputState* input, int keycode);
 void M3D_bind_default_mouse_motion(M3D_InputState* input, float dx, float dy);

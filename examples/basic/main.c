@@ -15,7 +15,7 @@
 static void update_auto_orbit_test(M3D_Engine* engine, bool enabled, float delta_seconds){
       if(enabled && engine->camera.mode == CAM_MODE_ORBIT){
             //move_camera_backward(&engine->camera, 0.2f);
-            //rotate_camera_yaw(&engine->camera, 45.0f * delta_seconds);
+            M3D_rotate_camera_yaw(&engine->camera, 45.0f * delta_seconds);
             //rotate_camera_pitch(&engine->camera, 20.0f * delta_seconds * sinf(SDL_GetTicks() / 500.0f));
       }
 }
@@ -114,11 +114,15 @@ int main(){
             while(SDL_PollEvent(&event)){
                   if (event.type == SDL_EVENT_QUIT) {
                         is_opened = false;
+                  }else if(event.type == SDL_EVENT_WINDOW_RESIZED){
+                        M3D_sync_window_size(&engine);
                   }else if( event.type == SDL_EVENT_KEY_DOWN){
                         if(event.key.key == SDLK_T && !event.key.repeat){
                               auto_orbit_test_enabled = !auto_orbit_test_enabled;
                         }
 
+                        M3D_bind_default_key_down_fullscreen(&engine, &input, (int)event.key.key, event.key.repeat ? 1 : 0);
+                        
                         int should_quit = 0;
                         M3D_bind_default_key_down(&engine, &input, (int)event.key.key, event.key.repeat ? 1 : 0, &should_quit);
                         if(should_quit){
@@ -154,6 +158,8 @@ int main(){
                   engine.camera.yaw * (180.0f / (float)M_PI),
                   engine.camera.pitch * (180.0f / (float)M_PI)
             );
+
+            dataRect.w = (float)engine.camera.width;
 
             M3D_end_frame(&engine);
 
