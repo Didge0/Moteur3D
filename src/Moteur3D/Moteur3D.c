@@ -487,7 +487,7 @@ void M3D_set_mode(Moteur3D* moteur, CameraMode mode){
 
 //MARK: Input Binding API
 bool M3D_bind_default_key_down_fullscreen(M3D_Engine* engine, M3D_InputState* input, int keycode, int is_repeat){
-      if(keycode == SDLK_F11 && !is_repeat){
+      if(keycode == SDLK_F11 && !is_repeat && engine != NULL){
             if(engine->window != NULL){
                   Uint32 flags = SDL_GetWindowFlags(engine->window);
                   int is_fullscreen = (flags & SDL_WINDOW_FULLSCREEN) != 0;
@@ -497,13 +497,23 @@ bool M3D_bind_default_key_down_fullscreen(M3D_Engine* engine, M3D_InputState* in
       }
       return false;
 }
-void M3D_bind_default_key_down(M3D_Engine* engine, M3D_InputState* input, int keycode, int is_repeat, int* should_quit){
-      if(keycode == SDLK_ESCAPE){
-            if(should_quit != NULL){
-                  *should_quit = 1;
-            }
-            return;
+
+bool M3D_bind_default_key_down_show_mouse(M3D_Engine* engine, M3D_InputState* input, int keycode, int is_repeat){
+      if(keycode == SDLK_LCTRL && !is_repeat && engine->window != NULL){
+            bool is_relative = SDL_GetWindowRelativeMouseMode(engine->window);
+            SDL_SetWindowRelativeMouseMode(engine->window, !is_relative);
+            return true;
       }
+      return false;
+}
+bool M3D_bind_default_key_down_quit(M3D_Engine* engine, M3D_InputState* input, int keycode, int is_repeat){
+      if(keycode == SDLK_ESCAPE){
+            return true;
+      }
+      return false;
+}
+
+void M3D_bind_default_key_down_camera(M3D_Engine* engine, M3D_InputState* input, int keycode, int is_repeat){
 
       if(keycode == SDLK_M && !is_repeat){
             if(engine->camera.mode == CAM_MODE_FPS){
@@ -511,12 +521,6 @@ void M3D_bind_default_key_down(M3D_Engine* engine, M3D_InputState* input, int ke
             }else{
                   M3D_set_mode(&engine->camera, CAM_MODE_FPS);
             }
-            return;
-      }
-
-      if(keycode == SDLK_LCTRL && !is_repeat){
-            bool is_relative = SDL_GetWindowRelativeMouseMode(engine->window);
-            SDL_SetWindowRelativeMouseMode(engine->window, !is_relative);
             return;
       }
 

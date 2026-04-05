@@ -121,11 +121,10 @@ int main(){
                               auto_orbit_test_enabled = !auto_orbit_test_enabled;
                         }
 
+                        M3D_bind_default_key_down_camera(&engine, &input, (int)event.key.key, event.key.repeat ? 1 : 0);
                         M3D_bind_default_key_down_fullscreen(&engine, &input, (int)event.key.key, event.key.repeat ? 1 : 0);
-                        
-                        int should_quit = 0;
-                        M3D_bind_default_key_down(&engine, &input, (int)event.key.key, event.key.repeat ? 1 : 0, &should_quit);
-                        if(should_quit){
+                        M3D_bind_default_key_down_show_mouse(&engine, &input, (int)event.key.key, event.key.repeat ? 1 : 0);
+                        if(M3D_bind_default_key_down_quit(&engine, &input, (int)event.key.key, event.key.repeat ? 1 : 0)){
                               is_opened = false;
                         }
                   }else if(event.type == SDL_EVENT_KEY_UP){

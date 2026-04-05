@@ -226,7 +226,9 @@ void M3D_set_mode(Moteur3D* moteur, CameraMode mode);
 
 /* Bindings clavier/souris par defaut. */
 bool M3D_bind_default_key_down_fullscreen(M3D_Engine* engine, M3D_InputState* input, int keycode, int is_repeat);
-void M3D_bind_default_key_down(M3D_Engine* engine, M3D_InputState* input, int keycode, int is_repeat, int* should_quit);
+bool M3D_bind_default_key_down_show_mouse(M3D_Engine* engine, M3D_InputState* input, int keycode, int is_repeat);
+bool M3D_bind_default_key_down_quit(M3D_Engine* engine, M3D_InputState* input, int keycode, int is_repeat);
+void M3D_bind_default_key_down_camera(M3D_Engine* engine, M3D_InputState* input, int keycode, int is_repeat);
 void M3D_bind_default_key_up(M3D_InputState* input, int keycode);
 void M3D_bind_default_mouse_motion(M3D_InputState* input, float dx, float dy);
 void M3D_bind_default_mouse_wheel(M3D_Engine* engine, float wheel_y);
