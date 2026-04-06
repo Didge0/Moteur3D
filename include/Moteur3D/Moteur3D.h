@@ -97,12 +97,6 @@ typedef struct {
     int move_up;
     int move_down;
 
-    /* Rotations clavier */
-    int rot_left;
-    int rot_right;
-    int rot_up;
-    int rot_down;
-
     /* Delta souris accumule pendant la frame */
     float mouse_dx;
     float mouse_dy;

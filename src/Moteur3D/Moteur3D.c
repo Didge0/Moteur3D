@@ -536,14 +536,6 @@ void M3D_bind_default_key_down_camera(M3D_Engine* engine, M3D_InputState* input,
             input->move_forward = 1;
       }else if(keycode == SDLK_S){
             input->move_backward = 1;
-      }else if(keycode == SDLK_LEFT){
-            input->rot_left = 1;
-      }else if(keycode == SDLK_RIGHT){
-            input->rot_right = 1;
-      }else if(keycode == SDLK_UP){
-            input->rot_up = 1;
-      }else if(keycode == SDLK_DOWN){
-            input->rot_down = 1;
       }
 }
 
@@ -560,14 +552,6 @@ void M3D_bind_default_key_up(M3D_InputState* input, int keycode){
             input->move_forward = 0;
       }else if(keycode == SDLK_S){
             input->move_backward = 0;
-      }else if(keycode == SDLK_LEFT){
-            input->rot_left = 0;
-      }else if(keycode == SDLK_RIGHT){
-            input->rot_right = 0;
-      }else if(keycode == SDLK_UP){
-            input->rot_up = 0;
-      }else if(keycode == SDLK_DOWN){
-            input->rot_down = 0;
       }
 }
 
@@ -624,21 +608,6 @@ static inline void m3d_apply_orbit_moves(Moteur3D* moteur, const M3D_InputState*
       }
 }
 
-static inline void m3d_apply_common_rotations(Moteur3D* moteur, const M3D_InputState* input, float rot_delta_deg){
-      if(input->rot_left){
-            M3D_rotate_camera_yaw(moteur, -rot_delta_deg);
-      }
-      if(input->rot_right){
-            M3D_rotate_camera_yaw(moteur, rot_delta_deg);
-      }
-      if(input->rot_up){
-            M3D_rotate_camera_pitch(moteur, rot_delta_deg);
-      }
-      if(input->rot_down){
-            M3D_rotate_camera_pitch(moteur, -rot_delta_deg);
-      }
-}
-
 //MARK: Input Apply API
 
 void M3D_apply_input_state(Moteur3D* moteur, M3D_InputState* input, float delta_seconds){
@@ -662,8 +631,6 @@ void M3D_apply_input_state(Moteur3D* moteur, M3D_InputState* input, float delta_
       }else if(moteur->mode == CAM_MODE_ORBIT){
             m3d_apply_orbit_moves(moteur, input, rot_delta_deg);
       }
-
-      m3d_apply_common_rotations(moteur, input, rot_delta_deg);
 
       if(input->mouse_dx != 0.0f){
             M3D_rotate_camera_yaw(moteur, input->mouse_dx * M3D_MOUSE_SENSITIVITY_DEG);
