@@ -141,7 +141,7 @@ int main(){
 
             M3D_clear_frame(&engine, 0xa9cf6dFF);
 
-            M3D_draw_triangles(&engine, cube_triangles, 12, 0x7EC4A6FF);
+            M3D_draw_triangles(&engine, cube_triangles, 12, 0x7EC4A6FF, true);
             M3D_draw_thick_lines(&engine, cube_lines, 12, 0x936DCFFF, 3);
 
 

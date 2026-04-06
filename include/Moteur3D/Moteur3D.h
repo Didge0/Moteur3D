@@ -193,11 +193,11 @@ size_t M3D_draw_lines(M3D_Engine* engine, const M3D_Line3D* lines, size_t count,
 /* Dessine un lot de lignes 3D avec une épaisseur et retourne le nombre dessine. */
 size_t M3D_draw_thick_lines(M3D_Engine* engine, const M3D_Line3D* lines, size_t count, uint32_t color, int thickness);
 
-/* Dessine un triangle 3D rempli. */
-bool M3D_draw_triangle(M3D_Engine* engine, const Vect3* a, const Vect3* b, const Vect3* c, uint32_t color);
+/* Dessine un triangle 3D rempli, avec ou sans rejet des faces arriere. */
+bool M3D_draw_triangle(M3D_Engine* engine, const Vect3* a, const Vect3* b, const Vect3* c, uint32_t color, bool backface_culling_enabled);
 
-/* Dessine un lot de triangles 3D remplis et retourne le nombre dessine. */
-size_t M3D_draw_triangles(M3D_Engine* engine, const M3D_Triangle3D* triangles, size_t count, uint32_t color);
+/* Dessine un lot de triangles 3D remplis avec le meme mode de rejet, et retourne le nombre dessine. */
+size_t M3D_draw_triangles(M3D_Engine* engine, const M3D_Triangle3D* triangles, size_t count, uint32_t color, bool backface_culling_enabled);
 
 //MARK: Camera Utility API
 

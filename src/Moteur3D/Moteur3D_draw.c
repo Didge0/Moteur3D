@@ -545,7 +545,7 @@ size_t M3D_draw_thick_lines(M3D_Engine* engine, const M3D_Line3D* lines, size_t 
       return drawn_count;
 }
 
-bool M3D_draw_triangle(M3D_Engine* engine, const Vect3* a, const Vect3* b, const Vect3* c, uint32_t color){
+bool M3D_draw_triangle(M3D_Engine* engine, const Vect3* a, const Vect3* b, const Vect3* c, uint32_t color, bool backface_culling_enabled){
       Vect4 a_view;
       Vect4 b_view;
       Vect4 c_view;
@@ -576,7 +576,7 @@ bool M3D_draw_triangle(M3D_Engine* engine, const Vect3* a, const Vect3* b, const
             M3D_PointProjection p1;
             M3D_PointProjection p2;
 
-            if(normal_z <= 0.0f){
+            if(backface_culling_enabled && normal_z <= 0.0f){
                   continue;
             }
 
@@ -610,7 +610,7 @@ bool M3D_draw_triangle(M3D_Engine* engine, const Vect3* a, const Vect3* b, const
       return drawn;
 }
 
-size_t M3D_draw_triangles(M3D_Engine* engine, const M3D_Triangle3D* triangles, size_t count, uint32_t color){
+size_t M3D_draw_triangles(M3D_Engine* engine, const M3D_Triangle3D* triangles, size_t count, uint32_t color, bool backface_culling_enabled){
       size_t i;
       size_t drawn_count = 0;
 
@@ -619,7 +619,7 @@ size_t M3D_draw_triangles(M3D_Engine* engine, const M3D_Triangle3D* triangles, s
       }
 
       for(i = 0; i < count; i++){
-            if(M3D_draw_triangle(engine, &triangles[i].a, &triangles[i].b, &triangles[i].c, color)){
+            if(M3D_draw_triangle(engine, &triangles[i].a, &triangles[i].b, &triangles[i].c, color, backface_culling_enabled)){
                   drawn_count++;
             }
       }
